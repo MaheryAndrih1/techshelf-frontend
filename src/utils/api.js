@@ -1,8 +1,11 @@
 import axios from 'axios';
 
-// Use environment variables for sensitive information
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ;
-const MEDIA_BASE_URL = import.meta.env.VITE_MEDIA_BASE_URL ;
+// Use environment variables with fallbacks for when env vars aren't available
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://techshelf-api.onrender.com/api/';
+const MEDIA_BASE_URL = import.meta.env.VITE_MEDIA_BASE_URL || 'https://techshelf-api.onrender.com/';
+
+// Log to help debug
+console.log('API base URL:', API_BASE_URL);
 
 const api = axios.create({
   baseURL: API_BASE_URL,
