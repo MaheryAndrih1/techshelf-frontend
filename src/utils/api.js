@@ -4,11 +4,15 @@ import axios from 'axios';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://techshelf-api.onrender.com/api/';
 const MEDIA_BASE_URL = import.meta.env.VITE_MEDIA_BASE_URL || 'https://techshelf-api.onrender.com/';
 
+// Use CORS proxy for deployment environment
+const isProduction = window.location.hostname !== 'localhost';
+const CORS_PROXY = isProduction ? 'https://corsproxy.io/?' : '';
+
 // Log to help debug
 console.log('API base URL:', API_BASE_URL);
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: isProduction ? `${CORS_PROXY}${API_BASE_URL}` : API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -20,19 +24,21 @@ export const getMediaUrl = (url) => {
   
   // If the URL is already absolute (starts with http)
   if (url.startsWith('http')) {
-    return url;
+    return isProduction ? `${CORS_PROXY}${url}` : url;
   }
   
   // If the URL starts with a slash, remove it to avoid double slashes
   const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
   
-  return `${MEDIA_BASE_URL}media/${cleanUrl}`;
+  const mediaUrl = `${MEDIA_BASE_URL}media/${cleanUrl}`;
+  return isProduction ? `${CORS_PROXY}${mediaUrl}` : mediaUrl;
 };
 
-// Update the token refresh URL to avoid double slashes
+// Update API interceptor to handle CORS issues
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
+    // Handle token refresh
     const originalRequest = error.config;
     
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -45,10 +51,11 @@ api.interceptors.response.use(
           throw new Error('No refresh token available');
         }
         
-        // Updated to use correct path
-        const response = await axios.post(`${API_BASE_URL}users/token/refresh/`, {
-          refresh: refreshToken,
-        });
+        const refreshUrl = `${API_BASE_URL}users/token/refresh/`;
+        const response = await axios.post(
+          isProduction ? `${CORS_PROXY}${refreshUrl}` : refreshUrl, 
+          { refresh: refreshToken }
+        );
         
         const { access } = response.data;
         
