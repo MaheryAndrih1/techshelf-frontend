@@ -6,31 +6,17 @@ const MEDIA_BASE_URL = (import.meta.env.VITE_MEDIA_BASE_URL || 'https://techshel
 
 // Use CORS proxy for deployment environment
 const isProduction = window.location.hostname !== 'localhost';
-const CORS_PROXY = isProduction ? 'https://api.allorigins.win/raw?url=' : '';
+const CORS_PROXY = isProduction ? 'https://corsproxy.io/?' : '';
 
 // Log to help debug
-console.log('Environment:', {
-  isProduction,
-  API_BASE_URL,
-  MEDIA_BASE_URL,
-  CORS_PROXY
-});
+console.log('API base URL:', API_BASE_URL);
+console.log('Using production mode:', isProduction);
 
 const api = axios.create({
-  baseURL: API_BASE_URL + '/',
+  baseURL: isProduction ? `${CORS_PROXY}${API_BASE_URL}/` : `${API_BASE_URL}/`,
   headers: {
     'Content-Type': 'application/json',
   },
-});
-
-// Add request interceptor for production environment
-api.interceptors.request.use((config) => {
-  if (isProduction) {
-    const originalUrl = config.url;
-    config.url = `${CORS_PROXY}${encodeURIComponent(API_BASE_URL + '/' + originalUrl)}`;
-    console.log('Making request to:', config.url);
-  }
-  return config;
 });
 
 // Helper function to handle media URLs
@@ -38,12 +24,11 @@ export const getMediaUrl = (url) => {
   if (!url) return null;
   
   if (url.startsWith('http')) {
-    return isProduction ? `${CORS_PROXY}${encodeURIComponent(url)}` : url;
+    return isProduction ? `${CORS_PROXY}${url}` : url;
   }
   
   const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
-  const fullUrl = `${MEDIA_BASE_URL}/media/${cleanUrl}`;
-  return isProduction ? `${CORS_PROXY}${encodeURIComponent(fullUrl)}` : fullUrl;
+  return isProduction ? `${CORS_PROXY}${MEDIA_BASE_URL}/media/${cleanUrl}` : `${MEDIA_BASE_URL}/media/${cleanUrl}`;
 };
 
 // Update API interceptor to handle CORS issues
@@ -65,7 +50,7 @@ api.interceptors.response.use(
         
         const refreshUrl = `${API_BASE_URL}users/token/refresh/`;
         const response = await axios.post(
-          isProduction ? `${CORS_PROXY}${encodeURIComponent(refreshUrl)}` : refreshUrl, 
+          isProduction ? `${CORS_PROXY}${refreshUrl}` : refreshUrl, 
           { refresh: refreshToken }
         );
         
