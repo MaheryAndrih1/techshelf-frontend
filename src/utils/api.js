@@ -1,22 +1,39 @@
 import axios from 'axios';
 
-// Use environment variables with fallbacks for when env vars aren't available
+// Use environment variables with fallbacks
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'https://techshelf-api.onrender.com/api').replace(/\/$/, '');
 const MEDIA_BASE_URL = (import.meta.env.VITE_MEDIA_BASE_URL || 'https://techshelf-api.onrender.com').replace(/\/$/, '');
 
-// Use CORS proxy for deployment environment
+// Use CORS proxy for production only
 const isProduction = window.location.hostname !== 'localhost';
-const CORS_PROXY = isProduction ? 'https://corsproxy.io/?' : '';
 
-// Log to help debug
-console.log('API base URL:', API_BASE_URL);
-console.log('Using production mode:', isProduction);
+// Function to encode URL for CORS proxy
+const encodeURL = (url) => {
+  return encodeURIComponent(url.replace(/([^:]\/)\/+/g, "$1"));
+};
 
 const api = axios.create({
-  baseURL: isProduction ? `${CORS_PROXY}${API_BASE_URL}/` : `${API_BASE_URL}/`,
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+});
+
+// Request interceptor to handle CORS proxy
+api.interceptors.request.use(request => {
+  if (isProduction) {
+    const fullUrl = `${request.baseURL}/${request.url}`.replace(/([^:]\/)\/+/g, "$1");
+    request.baseURL = '';
+    request.url = `https://api.allorigins.win/raw?url=${encodeURL(fullUrl)}`;
+  }
+  
+  console.log('Request:', {
+    url: request.url,
+    method: request.method,
+    baseURL: request.baseURL
+  });
+  
+  return request;
 });
 
 // Helper function to handle media URLs
@@ -24,11 +41,15 @@ export const getMediaUrl = (url) => {
   if (!url) return null;
   
   if (url.startsWith('http')) {
-    return isProduction ? `${CORS_PROXY}${url}` : url;
+    return isProduction 
+      ? `https://api.allorigins.win/raw?url=${encodeURL(url)}`
+      : url;
   }
   
-  const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
-  return isProduction ? `${CORS_PROXY}${MEDIA_BASE_URL}/media/${cleanUrl}` : `${MEDIA_BASE_URL}/media/${cleanUrl}`;
+  const fullUrl = `${MEDIA_BASE_URL}/media/${url.replace(/^\/+/, '')}`;
+  return isProduction
+    ? `https://api.allorigins.win/raw?url=${encodeURL(fullUrl)}`
+    : fullUrl;
 };
 
 // Update API interceptor to handle CORS issues
@@ -50,7 +71,7 @@ api.interceptors.response.use(
         
         const refreshUrl = `${API_BASE_URL}users/token/refresh/`;
         const response = await axios.post(
-          isProduction ? `${CORS_PROXY}${refreshUrl}` : refreshUrl, 
+          isProduction ? `https://api.allorigins.win/raw?url=${encodeURL(refreshUrl)}` : refreshUrl, 
           { refresh: refreshToken }
         );
         
