@@ -13,7 +13,7 @@ console.log('API base URL:', API_BASE_URL);
 console.log('Using production mode:', isProduction);
 
 const api = axios.create({
-  baseURL: isProduction ? `${CORS_PROXY}${API_BASE_URL}/` : `${API_BASE_URL}/`,
+  baseURL: `${API_BASE_URL}/`,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -31,14 +31,21 @@ export const getMediaUrl = (url) => {
   return isProduction ? `${CORS_PROXY}${MEDIA_BASE_URL}/media/${cleanUrl}` : `${MEDIA_BASE_URL}/media/${cleanUrl}`;
 };
 
-// Add request interceptor for debugging
+// Add request interceptor to handle CORS proxy
 api.interceptors.request.use(request => {
-  console.log('Starting Request:', {
+  if (isProduction) {
+    const originalUrl = request.url;
+    const fullUrl = `${API_BASE_URL}/${originalUrl}`.replace(/([^:]\/)\/+/g, "$1");
+    request.url = `${CORS_PROXY}${fullUrl}`;
+  }
+  
+  console.log('Making request:', {
     url: request.url,
     method: request.method,
     baseURL: request.baseURL,
     headers: request.headers
   });
+  
   return request;
 });
 
