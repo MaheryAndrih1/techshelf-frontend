@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../utils/api';
-import { useCart } from './CartContext';
 
 const AuthContext = createContext(null);
 
@@ -11,7 +10,6 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
-  const { mergeCartsAfterLogin } = useCart();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -62,7 +60,6 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('user', JSON.stringify(user));
       
       setCurrentUser(user);
-      await mergeCartsAfterLogin();
       return user;
     } catch (err) {
       const message = err.response?.data?.error || 'Failed to login';
@@ -100,7 +97,6 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('user', JSON.stringify(user));
 
         setCurrentUser(user);
-        await mergeCartsAfterLogin();
         return user;
       } else {
         return login(userData.email, userData.password);
