@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Layout from '../../components/layout/Layout';
 import { useAuth } from '../../context/AuthContext';
 import CustomButton from '../../components/CustomButton';
+import { useCart } from '../../context/CartContext';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -10,6 +11,7 @@ const LoginPage = () => {
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login, error: authError, isAuthenticated } = useAuth();
+  const { mergeCartsAfterLogin } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -52,7 +54,22 @@ const LoginPage = () => {
     
     try {
       await login(email, password);
-      // If successful, the useEffect will redirect
+      
+      // Merge guest cart with user cart
+      try {
+        await mergeCartsAfterLogin();
+      } catch (cartErr) {
+        console.error("Error merging carts:", cartErr);
+      }
+
+      // Handle redirect
+      const redirectToCart = sessionStorage.getItem('redirectToCartAfterAuth');
+      if (redirectToCart) {
+        sessionStorage.removeItem('redirectToCartAfterAuth');
+        navigate('/cart');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       console.error('Login failed:', err);
       setIsSubmitting(false);

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Layout from '../../components/layout/Layout';
 import { useAuth } from '../../context/AuthContext';
 import CustomButton from '../../components/CustomButton';
+import { useCart } from '../../context/CartContext';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -14,6 +15,7 @@ const RegisterPage = () => {
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { register, error: authError, isAuthenticated } = useAuth();
+  const { mergeCartsAfterLogin } = useCart();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -71,7 +73,22 @@ const RegisterPage = () => {
     
     try {
       await register(formData);
-      // If successful, the useEffect will redirect
+      
+      // Merge guest cart with user cart
+      try {
+        await mergeCartsAfterLogin();
+      } catch (cartErr) {
+        console.error("Error merging carts after registration:", cartErr);
+      }
+
+      // Handle redirect
+      const redirectToCart = sessionStorage.getItem('redirectToCartAfterAuth');
+      if (redirectToCart) {
+        sessionStorage.removeItem('redirectToCartAfterAuth');
+        navigate('/cart');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       console.error('Registration failed:', err);
       setIsSubmitting(false);

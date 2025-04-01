@@ -194,15 +194,15 @@ const StoreDetailPage = () => {
     }
   }, []);
 
-  const handleAddToCart = async (productId) => {
+  const handleAddToCart = async (productId, quantity = 1) => {
     try {
       if (!isAuthenticated) {
         sessionStorage.setItem('redirectToCartAfterAuth', 'true');
       }
-      await addToCart(productId, 1);
-      
+      await addToCart(productId, quantity);
+      // ... rest of the function
     } catch (err) {
-      console.error('Failed to add to cart:', err);
+      // ... error handling
     }
   };
 

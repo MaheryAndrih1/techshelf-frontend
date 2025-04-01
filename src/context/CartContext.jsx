@@ -50,6 +50,7 @@ export const CartProvider = ({ children }) => {
       try {
         setLoading(true);
         
+        // For each item in guest cart, add to user's cart via API
         for (const item of guestCart.items) {
           const productId = item.product_id || (item.product && item.product.product_id);
           if (productId) {
@@ -59,17 +60,17 @@ export const CartProvider = ({ children }) => {
                 quantity: item.quantity
               });
             } catch (itemErr) {
-              // Silent error handling for individual items
+              console.error('Failed to add item:', itemErr);
             }
           }
         }
         
+        // Clear guest cart after merging
         localStorage.removeItem(GUEST_CART_KEY);
-        
-        await fetchCart();
+        await fetchCart(); // Refresh cart
       } catch (err) {
+        console.error('Failed to merge carts:', err);
         setError('Failed to merge guest cart with your account cart');
-        throw err;
       } finally {
         setLoading(false);
       }
