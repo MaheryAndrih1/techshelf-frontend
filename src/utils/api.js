@@ -31,10 +31,27 @@ export const getMediaUrl = (url) => {
   return isProduction ? `${CORS_PROXY}${MEDIA_BASE_URL}/media/${cleanUrl}` : `${MEDIA_BASE_URL}/media/${cleanUrl}`;
 };
 
+// Add request interceptor for debugging
+api.interceptors.request.use(request => {
+  console.log('Starting Request:', {
+    url: request.url,
+    method: request.method,
+    baseURL: request.baseURL,
+    headers: request.headers
+  });
+  return request;
+});
+
 // Update API interceptor to handle CORS issues
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
+    console.error('API Error:', {
+      url: error.config?.url,
+      status: error.response?.status,
+      data: error.response?.data,
+      headers: error.response?.headers
+    });
     // Handle token refresh
     const originalRequest = error.config;
     
