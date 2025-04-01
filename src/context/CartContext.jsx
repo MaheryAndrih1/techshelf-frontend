@@ -26,21 +26,6 @@ export const CartProvider = ({ children }) => {
     }
   }, [isAuthenticated, authChecked]); 
 
-  // Add event listener for login
-  useEffect(() => {
-    const handleLogin = async () => {
-      if (isAuthenticated) {
-        await mergeCartsAfterLogin();
-      }
-    };
-
-    window.addEventListener('userLoggedIn', handleLogin);
-
-    return () => {
-      window.removeEventListener('userLoggedIn', handleLogin);
-    };
-  }, [isAuthenticated]);
-
   const saveGuestCart = (cartData) => {
     localStorage.setItem(GUEST_CART_KEY, JSON.stringify(cartData));
     return cartData;
@@ -62,26 +47,32 @@ export const CartProvider = ({ children }) => {
     const guestCart = loadGuestCart();
     
     if (guestCart?.items?.length > 0) {
-        try {
-            setLoading(true);
-            setError(null);
-            
-            // Use new endpoint to merge carts
-            await api.post('/orders/cart/merge/', guestCart);
-            
-            // Clear guest cart after successful merge
-            localStorage.removeItem(GUEST_CART_KEY);
-            
-            // Fetch the updated cart
-            await fetchCart();
-            
-            console.log('Cart merged successfully');
-        } catch (err) {
-            setError('Failed to merge cart items');
-            console.error('Cart merge error:', err);
-        } finally {
-            setLoading(false);
+      try {
+        setLoading(true);
+        
+        for (const item of guestCart.items) {
+          const productId = item.product_id || (item.product && item.product.product_id);
+          if (productId) {
+            try {
+              await api.post('/orders/cart/add/', {
+                product_id: productId,
+                quantity: item.quantity
+              });
+            } catch (itemErr) {
+              // Silent error handling for individual items
+            }
+          }
         }
+        
+        localStorage.removeItem(GUEST_CART_KEY);
+        
+        await fetchCart();
+      } catch (err) {
+        setError('Failed to merge guest cart with your account cart');
+        throw err;
+      } finally {
+        setLoading(false);
+      }
     }
   };
 

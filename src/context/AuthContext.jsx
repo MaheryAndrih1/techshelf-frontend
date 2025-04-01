@@ -60,12 +60,6 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('user', JSON.stringify(user));
       
       setCurrentUser(user);
-
-      // Signal successful login
-      if (window.dispatchEvent) {
-        window.dispatchEvent(new CustomEvent('userLoggedIn'));
-      }
-
       return user;
     } catch (err) {
       const message = err.response?.data?.error || 'Failed to login';
@@ -91,25 +85,7 @@ export const AuthProvider = ({ children }) => {
       const response = await api.post('/users/register/', registrationData);
       
       if (response.data && response.data.user) {
-        const loginResponse = await api.post('/users/login/', {
-          email: userData.email,
-          password: userData.password
-        });
-
-        const { user, access, refresh } = loginResponse.data;
-
-        localStorage.setItem('accessToken', access);
-        localStorage.setItem('refreshToken', refresh);
-        localStorage.setItem('user', JSON.stringify(user));
-
-        setCurrentUser(user);
-
-        // Signal successful registration and login
-        if (window.dispatchEvent) {
-          window.dispatchEvent(new CustomEvent('userLoggedIn'));
-        }
-
-        return user;
+        return login(userData.email, userData.password);
       } else {
         return login(userData.email, userData.password);
       }
