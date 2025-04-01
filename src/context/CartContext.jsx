@@ -26,6 +26,21 @@ export const CartProvider = ({ children }) => {
     }
   }, [isAuthenticated, authChecked]); 
 
+  // Add event listener for login
+  useEffect(() => {
+    const handleLogin = async () => {
+      if (isAuthenticated) {
+        await mergeCartsAfterLogin();
+      }
+    };
+
+    window.addEventListener('userLoggedIn', handleLogin);
+
+    return () => {
+      window.removeEventListener('userLoggedIn', handleLogin);
+    };
+  }, [isAuthenticated]);
+
   const saveGuestCart = (cartData) => {
     localStorage.setItem(GUEST_CART_KEY, JSON.stringify(cartData));
     return cartData;

@@ -60,6 +60,12 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('user', JSON.stringify(user));
       
       setCurrentUser(user);
+
+      // Signal successful login
+      if (window.dispatchEvent) {
+        window.dispatchEvent(new CustomEvent('userLoggedIn'));
+      }
+
       return user;
     } catch (err) {
       const message = err.response?.data?.error || 'Failed to login';
@@ -97,6 +103,12 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('user', JSON.stringify(user));
 
         setCurrentUser(user);
+
+        // Signal successful registration and login
+        if (window.dispatchEvent) {
+          window.dispatchEvent(new CustomEvent('userLoggedIn'));
+        }
+
         return user;
       } else {
         return login(userData.email, userData.password);
