@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 // Use environment variables with fallbacks for when env vars aren't available
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://techshelf-api.onrender.com/api/';
-const MEDIA_BASE_URL = import.meta.env.VITE_MEDIA_BASE_URL || 'https://techshelf-api.onrender.com/';
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'https://techshelf-api.onrender.com/api').replace(/\/$/, '');
+const MEDIA_BASE_URL = (import.meta.env.VITE_MEDIA_BASE_URL || 'https://techshelf-api.onrender.com').replace(/\/$/, '');
 
 // Use CORS proxy for deployment environment
 const isProduction = window.location.hostname !== 'localhost';
@@ -10,9 +10,10 @@ const CORS_PROXY = isProduction ? 'https://corsproxy.io/?' : '';
 
 // Log to help debug
 console.log('API base URL:', API_BASE_URL);
+console.log('Using production mode:', isProduction);
 
 const api = axios.create({
-  baseURL: isProduction ? `${CORS_PROXY}${API_BASE_URL}` : API_BASE_URL,
+  baseURL: isProduction ? `${CORS_PROXY}${API_BASE_URL}/` : `${API_BASE_URL}/`,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -22,16 +23,12 @@ const api = axios.create({
 export const getMediaUrl = (url) => {
   if (!url) return null;
   
-  // If the URL is already absolute (starts with http)
   if (url.startsWith('http')) {
     return isProduction ? `${CORS_PROXY}${url}` : url;
   }
   
-  // If the URL starts with a slash, remove it to avoid double slashes
   const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
-  
-  const mediaUrl = `${MEDIA_BASE_URL}media/${cleanUrl}`;
-  return isProduction ? `${CORS_PROXY}${mediaUrl}` : mediaUrl;
+  return isProduction ? `${CORS_PROXY}${MEDIA_BASE_URL}/media/${cleanUrl}` : `${MEDIA_BASE_URL}/media/${cleanUrl}`;
 };
 
 // Update API interceptor to handle CORS issues
