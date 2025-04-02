@@ -227,13 +227,22 @@ const Layout = ({ children }) => {
                   )}
                 </div>
               ) : (
-                <div className="ml-4 flex items-center md:ml-6">
-                  <Link to="/login" className="inline-block text-sm px-4 py-2 leading-none border rounded text-white border-[#c5630c] hover:border-transparent hover:text-white hover:bg-[#c5630c]">
-                    Login
-                  </Link>
-                  <Link to="/register" className="ml-2 inline-block text-sm px-4 py-2 leading-none rounded text-white bg-[#c5630c] hover:bg-[#e17a1d]">
-                    Register
-                  </Link>
+                // Only show login/register buttons on desktop, hide on mobile
+                <div className="ml-4 hidden md:flex md:items-center">
+                  <div className="flex md:flex-row space-y-0 md:space-x-2">
+                    <Link
+                      to="/login"
+                      className="text-sm px-4 py-2 border rounded text-white border-[#c5630c] hover:border-transparent hover:text-white hover:bg-[#c5630c] text-center"
+                    >
+                      Login
+                    </Link>
+                    <Link
+                      to="/register"
+                      className="text-sm px-4 py-2 rounded text-white bg-[#c5630c] hover:bg-[#e17a1d] text-center"
+                    >
+                      Register
+                    </Link>
+                  </div>
                 </div>
               )}
               
