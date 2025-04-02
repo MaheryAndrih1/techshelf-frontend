@@ -288,20 +288,6 @@ const Layout = ({ children }) => {
                     <div className="text-sm font-medium text-gray-500">{currentUser?.email}</div>
                   </div>
                 </div>
-                <div className="mt-3 space-y-1">
-                  <Link to="/profile" className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">
-                    Your Profile
-                  </Link>
-                  <Link to="/orders" className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">
-                    Your Orders
-                  </Link>
-                  <Link to="/cart" className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">
-                    Your Cart
-                  </Link>
-                  <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">
-                    Sign out
-                  </button>
-                </div>
               </div>
             ) : (
               <div className="pt-4 pb-3 border-t border-gray-200">
