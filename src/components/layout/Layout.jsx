@@ -273,20 +273,6 @@ const Layout = ({ children }) => {
               <Link to="/stores" className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800">
                 Stores
               </Link>
-              
-              {isAuthenticated && (
-                <>
-                  {isSeller ? (
-                    <Link to="/seller/dashboard" className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800">
-                      Seller Dashboard
-                    </Link>
-                  ) : (
-                    <Link to="/become-seller" className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800">
-                      Become a Seller
-                    </Link>
-                  )}
-                </>
-              )}
             </div>
             
             {isAuthenticated ? (
@@ -309,11 +295,8 @@ const Layout = ({ children }) => {
                   <Link to="/orders" className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">
                     Your Orders
                   </Link>
-                  <Link to="/liked-products" className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">
-                    Liked Products
-                  </Link>
-                  <Link to="/notifications" className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">
-                    Notifications
+                  <Link to="/cart" className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">
+                    Your Cart
                   </Link>
                   <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">
                     Sign out
