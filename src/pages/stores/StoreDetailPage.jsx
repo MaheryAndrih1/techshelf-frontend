@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import Layout from '../../components/layout/Layout';
 import api, { getMediaUrl } from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
@@ -25,6 +25,7 @@ const StoreDetailPage = () => {
   const [submitSuccess, setSubmitSuccess] = useState('');
   const [submitError, setSubmitError] = useState('');
   const storeContainerRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchStoreData = async () => {
@@ -129,7 +130,10 @@ const StoreDetailPage = () => {
     e.preventDefault();
     
     if (!isAuthenticated) {
-      window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+      // Store the current path for redirect after login
+      sessionStorage.setItem('redirectAfterAuth', window.location.pathname);
+      // Use navigate instead of direct window location change
+      navigate('/login');
       return;
     }
     
@@ -456,20 +460,32 @@ const SimpleButton = ({ onClick, disabled, children, type = "primary", fullWidth
                   </p>
                 </div>
                 
-                {isAuthenticated && store.user_id !== currentUser?.id && !ratings.find(r => r.user === currentUser?.username) && (
+                {/* Always show the write review button - if not authenticated, it will redirect to login */}
+                <div className="ml-auto">
                   <CustomButton 
-                    onClick={() => document.getElementById('write-review').scrollIntoView({ behavior: 'smooth' })}
+                    onClick={() => {
+                      if (!isAuthenticated) {
+                        sessionStorage.setItem('redirectAfterAuth', window.location.pathname);
+                        navigate('/login');
+                      } else {
+                        document.getElementById('write-review').scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }}
                     type="secondary"
-                    className="ml-auto"
+                    className="flex items-center gap-2"
                   >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+                      <path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" />
+                    </svg>
                     Write a Review
                   </CustomButton>
-                )}
+                </div>
               </div>
               
-              {/* Submit a Rating Form */}
-              {isAuthenticated && store.user_id !== currentUser?.id && (
-                <div className="review-form" id="write-review">
+              {/* Submit a Rating Form - for authenticated users who aren't store owners */}
+              {isAuthenticated && store.user_id !== currentUser?.id ? (
+                <div className="review-form mb-8" id="write-review">
                   <h3 className="text-xl font-semibold mb-6">Share Your Experience</h3>
                   
                   {submitSuccess && (
@@ -490,7 +506,7 @@ const SimpleButton = ({ onClick, disabled, children, type = "primary", fullWidth
                     </div>
                   )}
                   
-                  <form onSubmit={handleRatingSubmit} className="space-y-6">
+                  <form onSubmit={handleRatingSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow">
                     <div>
                       <label htmlFor="rating" className="block mb-3 text-lg font-medium">
                         Your Rating
@@ -527,22 +543,53 @@ const SimpleButton = ({ onClick, disabled, children, type = "primary", fullWidth
                         rows="4"
                         value={userRating.comment}
                         onChange={(e) => setUserRating({ ...userRating, comment: e.target.value })}
-                        className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2"
+                        className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c5630c]"
                         placeholder="Share what you liked or didn't like about this store..."
                       ></textarea>
                     </div>
                     
-                    {/* Submit Review Button */}
-                    <button 
-                      type="submit" 
-                      disabled={isSubmitting}
-                      className="bg-[#c5630c] text-white px-4 py-2 rounded hover:bg-[#b35500] disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    >
-                      {isSubmitting ? 'Submitting...' : 'Submit Review'}
-                    </button>
+                    {/* Submit Review Button - more prominent */}
+                    <div className="flex justify-end">
+                      <button 
+                        type="submit" 
+                        disabled={isSubmitting}
+                        className="bg-[#c5630c] text-white px-6 py-3 rounded-lg hover:bg-[#b35500] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium flex items-center gap-2"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Submitting...
+                          </>
+                        ) : (
+                          <>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                            Submit Review
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </form>
                 </div>
-              )}
+              ) : !isAuthenticated ? (
+                <div className="mb-8 p-6 bg-gray-50 rounded-lg shadow border border-gray-200 text-center">
+                  <h3 className="text-xl font-medium mb-4">Want to share your experience?</h3>
+                  <p className="text-gray-600 mb-4">Sign in to write a review for this store.</p>
+                  <button
+                    onClick={() => {
+                      sessionStorage.setItem('redirectAfterAuth', window.location.pathname);
+                      navigate('/login');
+                    }}
+                    className="bg-[#c5630c] text-white px-6 py-3 rounded-lg hover:bg-[#b35500] transition-colors font-medium"
+                  >
+                    Sign In to Write a Review
+                  </button>
+                </div>
+              ) : null}
 
               {/* Reviews List */}
               {!ratings || ratings.length === 0 ? (
