@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
@@ -54,6 +54,7 @@ const HomePage = () => {
   const [addingToCart, setAddingToCart] = useState({});
   const [likedProducts, setLikedProducts] = useState({});
   const [likingProduct, setLikingProduct] = useState({});
+  const navigate = useNavigate(); // Add this line to get the navigate function
 
   useEffect(() => {
     const fetchHomeData = async () => {
@@ -103,8 +104,10 @@ const HomePage = () => {
     e.stopPropagation();
     
     if (!isAuthenticated) {
+      // Store the current path for redirect after login
       sessionStorage.setItem('redirectAfterAuth', window.location.pathname);
-      window.location.href = '/login';
+      // Use navigate instead of window.location.href
+      navigate('/login');
       return;
     }
     
