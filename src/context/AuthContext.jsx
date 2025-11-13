@@ -82,6 +82,8 @@ export const AuthProvider = ({ children }) => {
         password2: userData.confirmPassword
       };
       
+      console.log('Sending registration data:', { ...registrationData, password: '***', password2: '***' });
+      
       const response = await api.post('/users/register/', registrationData);
       
       if (response.data && response.data.user) {
@@ -90,11 +92,48 @@ export const AuthProvider = ({ children }) => {
         return login(userData.email, userData.password);
       }
     } catch (err) {
-      const message = err.response?.data?.error || 
-                     err.response?.data?.detail ||
-                     (err.response?.data?.password2 ? 
-                       `Password confirmation: ${err.response.data.password2[0]}` : 
-                       'Registration failed. Please check your information.');
+      console.error('Registration error full:', err);
+      console.error('Registration error response:', err.response);
+      console.error('Registration error data:', err.response?.data);
+      
+      // Extract detailed error messages
+      let message = 'Registration failed. ';
+      
+      if (err.response?.data) {
+        const errors = err.response.data;
+        
+        // Log all error fields for debugging
+        console.log('All error fields:', Object.keys(errors));
+        
+        if (errors.username) {
+          message += `Username: ${Array.isArray(errors.username) ? errors.username[0] : errors.username}. `;
+        }
+        if (errors.email) {
+          message += `Email: ${Array.isArray(errors.email) ? errors.email[0] : errors.email}. `;
+        }
+        if (errors.password) {
+          message += `Password: ${Array.isArray(errors.password) ? errors.password[0] : errors.password}. `;
+        }
+        if (errors.password2) {
+          message += `Password confirmation: ${Array.isArray(errors.password2) ? errors.password2[0] : errors.password2}. `;
+        }
+        if (errors.error || errors.detail) {
+          message = errors.error || errors.detail;
+        }
+        
+        // Check for non_field_errors
+        if (errors.non_field_errors) {
+          message += `${Array.isArray(errors.non_field_errors) ? errors.non_field_errors[0] : errors.non_field_errors}. `;
+        }
+        
+        // If no specific error was found, show all errors
+        if (message === 'Registration failed. ') {
+          message = 'Registration failed: ' + JSON.stringify(errors);
+        }
+      } else {
+        message = 'Registration failed. Please check your information.';
+      }
+      
       setError(message);
       throw new Error(message);
     } finally {
